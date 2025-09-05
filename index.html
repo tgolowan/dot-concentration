@@ -44,6 +44,16 @@
             <button id="musicBtn" class="btn music">🎵 Play Music</button>
             <input type="range" id="volumeSlider" min="0" max="100" value="50" class="volume-slider">
         </div>
+        
+        <div class="camera-controls">
+            <button id="cameraBtn" class="btn camera">📷 Enable Eye Tracking</button>
+            <div class="camera-status" id="cameraStatus">Camera: Off</div>
+        </div>
+        
+        <div class="camera-container" id="cameraContainer" style="display: none;">
+            <video id="cameraVideo" autoplay muted playsinline></video>
+            <canvas id="cameraCanvas"></canvas>
+        </div>
     </div>
     
     <audio id="backgroundMusic" loop>

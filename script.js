@@ -9,10 +9,14 @@ class FocusApp {
         this.followStartTime = 0;
         this.accuracy = 0;
         this.musicPlaying = false;
+        this.cameraActive = false;
+        this.eyeTracking = false;
+        this.eyePosition = { x: 0, y: 0 };
         
         this.initializeElements();
         this.setupEventListeners();
         this.setupDotTracking();
+        this.setupEyeTracking();
     }
     
     initializeElements() {
@@ -27,6 +31,11 @@ class FocusApp {
         this.focusTimeDisplay = document.getElementById('focusTime');
         this.accuracyDisplay = document.getElementById('accuracy');
         this.appContainer = document.querySelector('.app-container');
+        this.cameraBtn = document.getElementById('cameraBtn');
+        this.cameraStatus = document.getElementById('cameraStatus');
+        this.cameraVideo = document.getElementById('cameraVideo');
+        this.cameraCanvas = document.getElementById('cameraCanvas');
+        this.cameraContainer = document.getElementById('cameraContainer');
     }
     
     setupEventListeners() {
@@ -35,6 +44,7 @@ class FocusApp {
         this.resetBtn.addEventListener('click', () => this.resetTimer());
         this.musicBtn.addEventListener('click', () => this.toggleMusic());
         this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+        this.cameraBtn.addEventListener('click', () => this.toggleCamera());
         
         // Prevent context menu on long press for mobile
         document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -234,6 +244,161 @@ class FocusApp {
         this.backgroundMusic.volume = volume;
         if (this.ambientSound) {
             this.ambientSound.setVolume(volume);
+        }
+    }
+    
+    setupEyeTracking() {
+        // Simple eye tracking using face detection
+        this.faceDetector = null;
+        this.eyeTrackingInterval = null;
+    }
+    
+    async toggleCamera() {
+        if (this.cameraActive) {
+            this.stopCamera();
+        } else {
+            await this.startCamera();
+        }
+    }
+    
+    async startCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: 320, 
+                    height: 240,
+                    facingMode: 'user'
+                } 
+            });
+            
+            this.cameraVideo.srcObject = stream;
+            this.cameraActive = true;
+            this.cameraStatus.textContent = 'Camera: On';
+            this.cameraBtn.textContent = '📷 Disable Eye Tracking';
+            this.cameraContainer.style.display = 'block';
+            
+            // Start eye tracking when video is ready
+            this.cameraVideo.onloadedmetadata = () => {
+                this.startEyeTracking();
+            };
+            
+        } catch (error) {
+            console.error('Camera access denied:', error);
+            this.cameraStatus.textContent = 'Camera: Access Denied';
+            alert('Camera access is required for eye tracking. Please allow camera access and try again.');
+        }
+    }
+    
+    stopCamera() {
+        if (this.cameraVideo.srcObject) {
+            this.cameraVideo.srcObject.getTracks().forEach(track => track.stop());
+            this.cameraVideo.srcObject = null;
+        }
+        
+        this.cameraActive = false;
+        this.eyeTracking = false;
+        this.cameraStatus.textContent = 'Camera: Off';
+        this.cameraBtn.textContent = '📷 Enable Eye Tracking';
+        this.cameraContainer.style.display = 'none';
+        
+        if (this.eyeTrackingInterval) {
+            clearInterval(this.eyeTrackingInterval);
+            this.eyeTrackingInterval = null;
+        }
+    }
+    
+    startEyeTracking() {
+        this.eyeTracking = true;
+        this.eyeTrackingInterval = setInterval(() => {
+            this.detectEyePosition();
+        }, 100); // Check every 100ms
+    }
+    
+    detectEyePosition() {
+        if (!this.cameraActive || !this.eyeTracking) return;
+        
+        const canvas = this.cameraCanvas;
+        const ctx = canvas.getContext('2d');
+        const video = this.cameraVideo;
+        
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 240;
+        
+        // Draw video frame to canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Simple eye detection using image data analysis
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const eyePosition = this.findEyePosition(imageData, canvas.width, canvas.height);
+        
+        if (eyePosition) {
+            this.eyePosition = eyePosition;
+            this.checkEyeFocus();
+        }
+    }
+    
+    findEyePosition(imageData, width, height) {
+        // Simple eye detection algorithm
+        // Look for dark regions (pupils) in the upper half of the face
+        const data = imageData.data;
+        const centerX = width / 2;
+        const centerY = height / 3; // Upper third of the image
+        const searchRadius = Math.min(width, height) / 4;
+        
+        let darkestX = centerX;
+        let darkestY = centerY;
+        let darkestValue = 255;
+        
+        // Search in a circular area around the center
+        for (let y = centerY - searchRadius; y < centerY + searchRadius; y += 2) {
+            for (let x = centerX - searchRadius; x < centerX + searchRadius; x += 2) {
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                
+                const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+                if (distance > searchRadius) continue;
+                
+                const index = (y * width + x) * 4;
+                const r = data[index];
+                const g = data[index + 1];
+                const b = data[index + 2];
+                const brightness = (r + g + b) / 3;
+                
+                if (brightness < darkestValue) {
+                    darkestValue = brightness;
+                    darkestX = x;
+                    darkestY = y;
+                }
+            }
+        }
+        
+        // Convert to screen coordinates (approximate)
+        const screenX = (darkestX / width) * window.innerWidth;
+        const screenY = (darkestY / height) * window.innerHeight;
+        
+        return { x: screenX, y: screenY };
+    }
+    
+    checkEyeFocus() {
+        if (!this.eyeTracking) return;
+        
+        const dotRect = this.focusDot.getBoundingClientRect();
+        const dotCenter = {
+            x: dotRect.left + dotRect.width / 2,
+            y: dotRect.top + dotRect.height / 2
+        };
+        
+        const distance = Math.sqrt(
+            Math.pow(this.eyePosition.x - dotCenter.x, 2) + 
+            Math.pow(this.eyePosition.y - dotCenter.y, 2)
+        );
+        
+        // Consider focusing if within 100px of the dot (eye tracking is less precise)
+        const isNearDot = distance < 100;
+        
+        if (isNearDot && !this.isFollowing) {
+            this.startFollowing();
+        } else if (!isNearDot && this.isFollowing) {
+            this.stopFollowing();
         }
     }
 }
