@@ -8,7 +8,7 @@ body {
     font-family: 'Arial', sans-serif;
     height: 100vh;
     overflow: hidden;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #000011;
     position: relative;
 }
 
@@ -19,18 +19,92 @@ body {
     width: 100%;
     height: 100%;
     background: 
-        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.3) 0%, transparent 50%);
-    animation: backgroundMove 20s ease-in-out infinite;
-    z-index: -1;
+        radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+        radial-gradient(2px 2px at 160px 30px, #ddd, transparent),
+        radial-gradient(1px 1px at 200px 60px, #fff, transparent),
+        radial-gradient(1px 1px at 240px 20px, rgba(255,255,255,0.7), transparent),
+        radial-gradient(2px 2px at 280px 50px, #eee, transparent),
+        radial-gradient(1px 1px at 320px 80px, #fff, transparent),
+        radial-gradient(1px 1px at 360px 40px, rgba(255,255,255,0.5), transparent),
+        linear-gradient(135deg, #000011 0%, #001122 50%, #000033 100%);
+    background-repeat: repeat;
+    background-size: 400px 400px;
+    animation: spaceMove 30s linear infinite;
+    z-index: -2;
 }
 
-@keyframes backgroundMove {
-    0%, 100% { transform: translateX(0) translateY(0) scale(1); }
-    25% { transform: translateX(-20px) translateY(-10px) scale(1.05); }
-    50% { transform: translateX(10px) translateY(-20px) scale(0.95); }
-    75% { transform: translateX(-10px) translateY(10px) scale(1.02); }
+@keyframes spaceMove {
+    0% { transform: translateX(0) translateY(0); }
+    100% { transform: translateX(-400px) translateY(-400px); }
+}
+
+.planets {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.planet {
+    position: absolute;
+    border-radius: 50%;
+    animation: planetOrbit 60s linear infinite;
+}
+
+.planet1 {
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(circle at 30% 30%, #ff6b6b, #d63031);
+    top: 20%;
+    left: 10%;
+    animation-duration: 45s;
+    box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+}
+
+.planet2 {
+    width: 15px;
+    height: 15px;
+    background: radial-gradient(circle at 30% 30%, #74b9ff, #0984e3);
+    top: 60%;
+    left: 80%;
+    animation-duration: 70s;
+    animation-direction: reverse;
+    box-shadow: 0 0 15px rgba(116, 185, 255, 0.5);
+}
+
+.planet3 {
+    width: 25px;
+    height: 25px;
+    background: radial-gradient(circle at 30% 30%, #fdcb6e, #e17055);
+    top: 40%;
+    left: 70%;
+    animation-duration: 85s;
+    box-shadow: 0 0 25px rgba(253, 203, 110, 0.5);
+}
+
+.planet4 {
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle at 30% 30%, #a29bfe, #6c5ce7);
+    top: 80%;
+    left: 20%;
+    animation-duration: 55s;
+    animation-direction: reverse;
+    box-shadow: 0 0 12px rgba(162, 155, 254, 0.5);
+}
+
+@keyframes planetOrbit {
+    0% { transform: translateX(0) translateY(0) rotate(0deg); }
+    25% { transform: translateX(50px) translateY(-30px) rotate(90deg); }
+    50% { transform: translateX(100px) translateY(0) rotate(180deg); }
+    75% { transform: translateX(50px) translateY(30px) rotate(270deg); }
+    100% { transform: translateX(0) translateY(0) rotate(360deg); }
 }
 
 .app-container {
@@ -135,9 +209,10 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     box-shadow: 
-        0 0 20px rgba(255, 255, 255, 0.8),
-        0 0 40px rgba(255, 255, 255, 0.4),
-        0 0 60px rgba(255, 255, 255, 0.2);
+        0 0 20px rgba(255, 255, 255, 0.9),
+        0 0 40px rgba(135, 206, 250, 0.6),
+        0 0 60px rgba(70, 130, 180, 0.4),
+        0 0 80px rgba(25, 25, 112, 0.2);
     animation: dotPulse 2s ease-in-out infinite;
     transition: all 0.3s ease;
 }
@@ -146,21 +221,28 @@ body {
     0%, 100% { 
         transform: translate(-50%, -50%) scale(1);
         box-shadow: 
-            0 0 20px rgba(255, 255, 255, 0.8),
-            0 0 40px rgba(255, 255, 255, 0.4),
-            0 0 60px rgba(255, 255, 255, 0.2);
+            0 0 20px rgba(255, 255, 255, 0.9),
+            0 0 40px rgba(135, 206, 250, 0.6),
+            0 0 60px rgba(70, 130, 180, 0.4),
+            0 0 80px rgba(25, 25, 112, 0.2);
     }
     50% { 
         transform: translate(-50%, -50%) scale(1.1);
         box-shadow: 
-            0 0 25px rgba(255, 255, 255, 0.9),
-            0 0 50px rgba(255, 255, 255, 0.5),
-            0 0 75px rgba(255, 255, 255, 0.3);
+            0 0 25px rgba(255, 255, 255, 1),
+            0 0 50px rgba(135, 206, 250, 0.8),
+            0 0 75px rgba(70, 130, 180, 0.6),
+            0 0 100px rgba(25, 25, 112, 0.4);
     }
 }
 
 .dot.following {
-    background: radial-gradient(circle, #4CAF50 0%, #2e7d32 100%);
+    background: radial-gradient(circle, #00ff88 0%, #00cc66 100%);
+    box-shadow: 
+        0 0 25px rgba(0, 255, 136, 0.9),
+        0 0 50px rgba(0, 204, 102, 0.6),
+        0 0 75px rgba(0, 153, 76, 0.4),
+        0 0 100px rgba(0, 102, 51, 0.2);
     animation: dotSuccess 0.5s ease-in-out;
 }
 

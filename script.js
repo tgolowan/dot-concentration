@@ -189,47 +189,52 @@ class FocusApp {
     
     toggleMusic() {
         if (this.musicPlaying) {
-            this.backgroundMusic.pause();
+            this.stopAmbientMusic();
             this.musicBtn.textContent = '🎵 Play Music';
             this.musicPlaying = false;
         } else {
-            this.backgroundMusic.play().catch(e => {
-                console.log('Audio play failed:', e);
-                // Create a simple tone if audio file is not available
-                this.createTone();
-            });
+            this.startAmbientMusic();
             this.musicBtn.textContent = '🔇 Stop Music';
             this.musicPlaying = true;
         }
     }
     
-    createTone() {
-        // Create a simple calming tone using Web Audio API
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(220, audioContext.currentTime); // A3 note
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
-        
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 2);
-        
-        // Loop the tone
-        if (this.musicPlaying) {
-            setTimeout(() => this.createTone(), 2000);
+    startAmbientMusic() {
+        try {
+            // Try to play the background music file first
+            this.backgroundMusic.volume = this.volumeSlider.value / 100;
+            this.backgroundMusic.play().catch(e => {
+                console.log('Audio file not found, using generated ambient music');
+                this.createAmbientMusic();
+            });
+        } catch (e) {
+            console.log('Audio not supported, using generated ambient music');
+            this.createAmbientMusic();
         }
+    }
+    
+    stopAmbientMusic() {
+        this.backgroundMusic.pause();
+        this.backgroundMusic.currentTime = 0;
+        if (this.ambientSound) {
+            this.ambientSound.stop();
+        }
+    }
+    
+    createAmbientMusic() {
+        if (!this.ambientSound) {
+            this.ambientSound = new AmbientSound();
+            this.ambientSound.init();
+        }
+        this.ambientSound.start();
     }
     
     setVolume(value) {
         const volume = value / 100;
         this.backgroundMusic.volume = volume;
+        if (this.ambientSound) {
+            this.ambientSound.setVolume(volume);
+        }
     }
 }
 
@@ -244,6 +249,7 @@ class AmbientSound {
         this.audioContext = null;
         this.oscillators = [];
         this.isPlaying = false;
+        this.volume = 0.1;
     }
     
     init() {
@@ -259,8 +265,8 @@ class AmbientSound {
         
         this.isPlaying = true;
         
-        // Create multiple sine waves for ambient sound
-        const frequencies = [220, 330, 440]; // A3, E4, A4
+        // Create multiple sine waves for ambient space music
+        const frequencies = [220, 330, 440, 554]; // A3, E4, A4, C#5
         
         frequencies.forEach((freq, index) => {
             const oscillator = this.audioContext.createOscillator();
@@ -273,15 +279,15 @@ class AmbientSound {
             oscillator.type = 'sine';
             
             // Very low volume for ambient effect
-            gainNode.gain.setValueAtTime(0.02, this.audioContext.currentTime);
+            gainNode.gain.setValueAtTime(this.volume * 0.3, this.audioContext.currentTime);
             
             // Add slight frequency modulation for natural sound
             const lfo = this.audioContext.createOscillator();
             const lfoGain = this.audioContext.createGain();
             
-            lfo.frequency.setValueAtTime(0.1 + index * 0.05, this.audioContext.currentTime);
+            lfo.frequency.setValueAtTime(0.05 + index * 0.02, this.audioContext.currentTime);
             lfo.type = 'sine';
-            lfoGain.gain.setValueAtTime(2, this.audioContext.currentTime);
+            lfoGain.gain.setValueAtTime(1 + index * 0.5, this.audioContext.currentTime);
             
             lfo.connect(lfoGain);
             lfoGain.connect(oscillator.frequency);
@@ -289,7 +295,7 @@ class AmbientSound {
             oscillator.start();
             lfo.start();
             
-            this.oscillators.push({ oscillator, lfo });
+            this.oscillators.push({ oscillator, lfo, gainNode });
         });
     }
     
@@ -298,10 +304,23 @@ class AmbientSound {
         
         this.isPlaying = false;
         this.oscillators.forEach(({ oscillator, lfo }) => {
-            oscillator.stop();
-            lfo.stop();
+            try {
+                oscillator.stop();
+                lfo.stop();
+            } catch (e) {
+                // Oscillator might already be stopped
+            }
         });
         this.oscillators = [];
+    }
+    
+    setVolume(volume) {
+        this.volume = volume;
+        if (this.isPlaying) {
+            this.oscillators.forEach(({ gainNode }) => {
+                gainNode.gain.setValueAtTime(volume * 0.3, this.audioContext.currentTime);
+            });
+        }
     }
 }
 
