@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Dot - Concentration App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background"></div>
+    
+    <div class="app-container">
+        <div class="timer-display">
+            <div class="time" id="timer">00:00</div>
+            <div class="timer-controls">
+                <button id="startBtn" class="btn start">Start</button>
+                <button id="stopBtn" class="btn stop" disabled>Stop</button>
+                <button id="resetBtn" class="btn reset">Reset</button>
+            </div>
+        </div>
+        
+        <div class="dot-container">
+            <div class="dot" id="focusDot"></div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-label">Focus Time:</span>
+                <span class="stat-value" id="focusTime">0s</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Accuracy:</span>
+                <span class="stat-value" id="accuracy">0%</span>
+            </div>
+        </div>
+        
+        <div class="audio-controls">
+            <button id="musicBtn" class="btn music">🎵 Play Music</button>
+            <input type="range" id="volumeSlider" min="0" max="100" value="50" class="volume-slider">
+        </div>
+    </div>
+    
+    <audio id="backgroundMusic" loop>
+        <source src="calm-music.mp3" type="audio/mpeg">
+        <source src="calm-music.ogg" type="audio/ogg">
+    </audio>
+    
+    <script src="script.js"></script>
+</body>
+</html>
